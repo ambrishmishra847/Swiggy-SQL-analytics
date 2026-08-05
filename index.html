@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swiggy Restaurant Analytics | SQL Portfolio</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23160d07'/%3E%3Cpath d='M18 22h28l-4 24H22l-4-24z' fill='%23f97316'/%3E%3Cpath d='M24 18c0-4 3-7 8-7s8 3 8 7' fill='none' stroke='%23fed7aa' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/alasql@1.7.3/dist/alasql.min.js"></script>
+  <script src="./swiggy_data.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=IBM+Plex+Mono:wght@400;500;700&display=swap');
+
+    :root {
+      --bg: #120b07;
+      --panel: rgba(28, 17, 11, 0.84);
+      --border: rgba(251, 146, 60, 0.22);
+      --text: #fff7ed;
+      --accent: #f97316;
+      --accent-2: #fb923c;
+      --accent-3: #f59e0b;
+      --shadow: rgba(124, 45, 18, 0.34);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(249, 115, 22, 0.24), transparent 24%),
+        radial-gradient(circle at 84% 70%, rgba(37, 99, 235, 0.16), transparent 28%),
+        linear-gradient(160deg, #0f0a07 0%, #120b07 48%, #1c110b 100%);
+      color: var(--text);
+      font-family: 'Sora', sans-serif;
+      overflow: hidden;
+      letter-spacing: 0;
+    }
+
+    .glass-panel {
+      background: var(--panel);
+      backdrop-filter: blur(18px);
+      border: 1px solid var(--border);
+      box-shadow: 0 14px 40px var(--shadow);
+    }
+
+    .metric-card {
+      background: linear-gradient(135deg, rgba(52, 31, 17, 0.92), rgba(124, 45, 18, 0.38));
+      border: 1px solid rgba(251, 146, 60, 0.18);
+    }
+
+    .text-gradient {
+      background: linear-gradient(135deg, #fdba74 0%, #f97316 45%, #f59e0b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .code-editor {
+      background:
+        radial-gradient(rgba(120, 53, 15, 0.45) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(22, 13, 7, 0.95), rgba(14, 9, 5, 0.98));
+      background-size: 20px 20px, auto;
+    }
+
+    .query-btn.active {
+      background: rgba(249, 115, 22, 0.14);
+      border-color: rgba(251, 146, 60, 0.5);
+    }
+
+    .filter-control {
+      background: rgba(32, 20, 13, 0.85);
+      border: 1px solid rgba(154, 52, 18, 0.7);
+      color: #ffedd5;
+    }
+
+    .chart-track {
+      background: rgba(28, 17, 11, 0.9);
+      border: 1px solid rgba(120, 53, 15, 0.68);
+    }
+
+    .chart-bar {
+      background: linear-gradient(90deg, #f97316, #fb923c, #2563eb);
+      transition: width 420ms ease;
+    }
+
+    .sql-highlight .keyword { color: #fb923c; font-weight: 700; }
+    .sql-highlight .string { color: #fcd34d; }
+    .sql-highlight .number { color: #7dd3fc; }
+    .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scroll::-webkit-scrollbar-track { background: rgba(32, 20, 13, 0.65); }
+    .custom-scroll::-webkit-scrollbar-thumb { background: rgba(251, 146, 60, 0.35); border-radius: 999px; }
+    .smooth-btn { transition: transform 220ms ease, background-color 220ms ease, border-color 220ms ease, box-shadow 220ms ease; }
+    .smooth-btn:hover { transform: translateY(-2px); }
+    .smooth-btn:active { transform: translateY(0) scale(0.98); }
+    .fade-in { animation: fadeIn 420ms ease both; }
+    .slide-up { animation: slideUp 520ms ease both; }
+
+    .page-transition {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 30%;
+      background: linear-gradient(135deg, rgba(249, 115, 22, 0.98), rgba(245, 158, 11, 0.98));
+      transform: skewX(-6deg) translateX(-80px);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .page-transition.anim-trans { animation: pageSweep 1.55s ease-in-out forwards; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pageSweep {
+      0% { z-index: 1; width: 30%; transform: skewX(-6deg) translateX(-80px); }
+      20% { z-index: 60; width: 44%; transform: skewX(5deg) translateX(-100%); }
+      42% { z-index: 60; width: 110%; transform: skewX(0deg) translateX(0); }
+      70% { z-index: 60; width: 110%; transform: skewX(2deg) translateX(0); }
+      100% { z-index: 1; width: 30%; transform: skewX(-6deg) translateX(-80px); }
+    }
+
+    @media (max-width: 900px) {
+      body { overflow: auto; }
+      .mobile-scroll-page { height: auto; min-height: 100vh; overflow: visible; }
+      .mobile-scroll-content { overflow: visible; max-height: none; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useEffect, useMemo, useState } = React;
+
+    const SWIGGY_DATA = (window.SWIGGY_DATA || []).map((row) => ({
+      ...row,
+      id: Number(row.id),
+      rating: Number(row.rating),
+      rating_count: Number(row.rating_count),
+      cost: Number(row.cost)
+    }));
+
+    const getCostBand = (cost) => {
+      if (cost < 200) return 'Budget';
+      if (cost <= 500) return 'Affordable';
+      if (cost <= 1000) return 'Premium';
+      return 'Luxury';
+    };
+
+    const getRatingBand = (rating) => {
+      if (rating >= 4.5) return 'Elite';
+      if (rating >= 4.0) return 'High';
+      if (rating >= 3.5) return 'Mid';
+      return 'Needs Work';
+    };
+
+    const DATA = SWIGGY_DATA.map((row) => ({
+      ...row,
+      cost_band: getCostBand(row.cost),
+      rating_band: getRatingBand(row.rating)
+    }));
+
+    alasql('CREATE TABLE restaurant (id INT, name STRING, city STRING, rating NUMBER, rating_count INT, cuisine STRING, cost INT, link STRING, cost_band STRING, rating_band STRING)');
+    alasql.tables.restaurant.data = DATA;
+    alasql.fn.LN = Math.log;
+
+    const QUERIES = [
+      {
+        id: 1,
+        title: 'Top Rated Restaurants',
+        logic: 'Ranks restaurants by rating first and review confidence second for a reliable top-10 view.',
+        sql: `SELECT name, city, rating, rating_count
+FROM restaurant
+ORDER BY rating DESC, rating_count DESC
+LIMIT 10;`
+      },
+      {
+        id: 2,
+        title: 'Lowest Rated Restaurants',
+        logic: 'Surfaces the weakest performers in the dataset for quality intervention.',
+        sql: `SELECT name, city, rating, rating_count
+FROM restaurant
+ORDER BY rating ASC, rating_count ASC
+LIMIT 10;`
+      },
+      {
+        id: 3,
+        title: 'Rating Distribution',
+        logic: 'Buckets restaurants by floored rating so the portfolio can show service quality spread.',
+        sql: `SELECT FLOOR(rating) AS rating_group, COUNT(*) AS restaurants
+FROM restaurant
+GROUP BY FLOOR(rating)
+ORDER BY rating_group;`
+      },
+      {
+        id: 4,
+        title: 'Top Cuisines',
+        logic: 'Counts cuisine frequency to identify the strongest demand categories in the platform mix.',
+        sql: `SELECT cuisine, COUNT(*) AS restaurants
+FROM restaurant
+GROUP BY cuisine
+ORDER BY restaurants DESC
+LIMIT 10;`
+      },
+      {
+        id: 5,
+        title: 'Cities With Most Restaurants',
+        logic: 'Measures restaurant density and adds average rating plus average cost for city-level comparison.',
+        sql: `SELECT city, COUNT(*) AS restaurants, ROUND(AVG(rating), 2) AS avg_rating, ROUND(AVG(cost), 2) AS avg_cost
+FROM restaurant
+GROUP BY city
+ORDER BY restaurants DESC;`
+      },
+      {
+        id: 6,
+        title: 'Price Tier vs Rating',
+        logic: 'Checks whether premium restaurants really earn better customer ratings.',
+        sql: `SELECT
+CASE
+  WHEN cost < 300 THEN 'Budget'
+  WHEN cost BETWEEN 300 AND 700 THEN 'Mid Range'
+  ELSE 'Premium'
+END AS category,
+ROUND(AVG(rating), 2) AS avg_rating
+FROM restaurant
+GROUP BY category;`
+      },
+      {
+        id: 7,
+        title: 'Highest Engagement',
+        logic: 'Combines restaurant-level review volume and rating to reveal brands with strongest customer interaction.',
+        sql: `SELECT name, SUM(rating_count) AS total_rating, ROUND(AVG(rating), 2) AS ratings
+FROM restaurant
+GROUP BY name
+ORDER BY total_rating DESC, ratings DESC
+LIMIT 10;`
+      },
+      {
+        id: 8,
+        title: 'Underrated Restaurants',
+        logic: 'Finds high-rated restaurants that remain below average cost, a good shortlist for promotion.',
+        sql: `SELECT name, city, cost, rating
+FROM restaurant
+WHERE cost < (SELECT AVG(cost) FROM restaurant)
+AND rating > (SELECT AVG(rating) FROM restaurant)
+ORDER BY rating DESC, cost ASC
+LIMIT 50;`
+      },
+      {
+        id: 9,
+        title: 'Overpriced Restaurants',
+        logic: 'Flags restaurants charging above average while delivering below-average ratings.',
+        sql: `SELECT name, city, cost, rating
+FROM restaurant
+WHERE cost > 2 * (SELECT AVG(cost) FROM restaurant)
+AND rating < (SELECT AVG(rating) FROM restaurant)
+ORDER BY cost DESC
+LIMIT 50;`
+      },
+      {
+        id: 10,
+        title: 'Happiest Cities',
+        logic: 'Keeps only cities with enough restaurant volume, then ranks them by average rating.',
+        sql: `SELECT city, ROUND(AVG(rating), 2) AS avg_rating
+FROM restaurant
+GROUP BY city
+HAVING COUNT(*) > 30
+ORDER BY avg_rating DESC
+LIMIT 20;`
+      },
+      {
+        id: 11,
+        title: 'Best Value Cities',
+        logic: 'Calculates a city-level value score by comparing average rating with average cost.',
+        sql: `SELECT city, COUNT(*) AS total_restaurants, ROUND(AVG(rating), 2) AS avg_rating,
+ROUND(AVG(cost), 2) AS avg_cost,
+ROUND(AVG(rating) / AVG(cost), 5) AS value_score
+FROM restaurant
+GROUP BY city
+HAVING COUNT(*) >= 20
+ORDER BY value_score DESC
+LIMIT 20;`
+      },
+      {
+        id: 12,
+        title: 'Expansion Opportunity',
+        logic: 'Blends restaurant count, average rating, and average cost into an expansion score.',
+        sql: `SELECT city, ROUND(COUNT(*) * AVG(rating) / AVG(cost), 2) AS expansion_score
+FROM restaurant
+GROUP BY city
+ORDER BY expansion_score DESC
+LIMIT 20;`
+      },
+      {
+        id: 13,
+        title: 'Customer Value Index',
+        logic: 'Builds the project KPI by balancing rating, review confidence, and affordability.',
+        sql: `SELECT name, city, rating, rating_count, cost,
+ROUND((rating * LN(rating_count + 1)) / cost, 5) AS customer_value_index
+FROM restaurant
+ORDER BY customer_value_index DESC
+LIMIT 25;`
+      }
+    ];
+
+    const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
+    const formatCost = (value) => `Rs ${formatNumber(Math.round(value || 0))}`;
+    const escapeHTML = (text) => String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    const highlightSQL = (sql) => escapeHTML(sql)
+      .replace(/('[^']*')/g, '<span class="string">$1</span>')
+      .replace(/\b(\d+(\.\d+)?)\b/g, '<span class="number">$1</span>')
+      .replace(/\b(SELECT|FROM|WHERE|GROUP BY|ORDER BY|HAVING|LIMIT|WITH|AS|CASE|WHEN|THEN|ELSE|END|JOIN|INNER JOIN|LEFT JOIN|ON|AND|OR|IN|BETWEEN|COUNT|SUM|AVG|MAX|MIN|ROUND|ROW_NUMBER|RANK|OVER|PARTITION BY|LN|FLOOR)\b/gi, '<span class="keyword">$1</span>');
+
+    const groupBy = (rows, key) => rows.reduce((acc, row) => {
+      const value = typeof key === 'function' ? key(row) : row[key];
+      acc[value] = acc[value] || [];
+      acc[value].push(row);
+      return acc;
+    }, {});
+
+    const summarizeBy = (rows, key, mode = 'count') => Object.entries(groupBy(rows, key))
+      .map(([label, groupedRows]) => ({
+        label,
+        value: mode === 'avg-rating'
+          ? groupedRows.reduce((sum, row) => sum + row.rating, 0) / groupedRows.length
+          : mode === 'avg-cost'
+            ? groupedRows.reduce((sum, row) => sum + row.cost, 0) / groupedRows.length
+            : groupedRows.length
+      }))
+      .sort((a, b) => b.value - a.value);
+
+    const BarChart = ({ title, rows, formatter = formatNumber }) => {
+      const maxValue = rows[0]?.value || 1;
+      return (
+        <div className="glass-panel rounded-xl p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-white">{title}</h3>
+            <span className="text-[10px] font-mono uppercase tracking-widest text-orange-300/80">Live View</span>
+          </div>
+          <div className="space-y-3">
+            {rows.length === 0 ? (
+              <div className="h-32 flex items-center justify-center text-xs font-mono uppercase text-orange-200/40">No matching data</div>
+            ) : rows.map((row) => (
+              <div key={row.label}>
+                <div className="flex justify-between gap-3 text-xs mb-1">
+                  <span className="text-orange-50 truncate">{row.label}</span>
+                  <span className="font-mono text-orange-200 whitespace-nowrap">{formatter(row.value)}</span>
+                </div>
+                <div className="chart-track h-2 rounded-full overflow-hidden">
+                  <div className="chart-bar h-full rounded-full" style={{ width: `${Math.max((row.value / maxValue) * 100, 4)}%` }}></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    const App = () => {
+      const defaultQuery = QUERIES[4];
+      const [showLanding, setShowLanding] = useState(true);
+      const [isTransitioning, setIsTransitioning] = useState(false);
+      const [activeQuery, setActiveQuery] = useState(defaultQuery);
+      const [userSQL, setUserSQL] = useState(defaultQuery.sql);
+      const [filters, setFilters] = useState({ city: 'All', cuisine: 'All', cost_band: 'All', rating_band: 'All' });
+      const [result, setResult] = useState([]);
+      const [msg, setMsg] = useState({ type: 'info', text: 'Load a query and run it against the Swiggy dataset.' });
+
+      const filteredRows = useMemo(() => DATA.filter((row) => (
+        (filters.city === 'All' || row.city === filters.city) &&
+        (filters.cuisine === 'All' || row.cuisine === filters.cuisine) &&
+        (filters.cost_band === 'All' || row.cost_band === filters.cost_band) &&
+        (filters.rating_band === 'All' || row.rating_band === filters.rating_band)
+      )), [filters]);
+
+      const uniqueValues = useMemo(() => ({
+        city: [...new Set(DATA.map((row) => row.city))].sort(),
+        cuisine: [...new Set(DATA.map((row) => row.cuisine))].sort(),
+        cost_band: ['Budget', 'Affordable', 'Premium', 'Luxury'],
+        rating_band: ['Elite', 'High', 'Mid', 'Needs Work']
+      }), []);
+
+      const dashboardStats = useMemo(() => {
+        const topCity = summarizeBy(filteredRows, 'city')[0];
+        const topCuisine = summarizeBy(filteredRows, 'cuisine')[0];
+        const avgRating = filteredRows.reduce((sum, row) => sum + row.rating, 0) / (filteredRows.length || 1);
+        const avgCost = filteredRows.reduce((sum, row) => sum + row.cost, 0) / (filteredRows.length || 1);
+        const topRestaurant = [...filteredRows]
+          .filter((row) => row.rating_count > 100)
+          .sort((a, b) => b.rating - a.rating || b.rating_count - a.rating_count)[0];
+        return {
+          totalRestaurants: filteredRows.length,
+          avgRating: avgRating.toFixed(2),
+          avgCost,
+          topCity: topCity?.label || 'N/A',
+          topCuisine: topCuisine?.label || 'N/A',
+          topRestaurant: topRestaurant ? `${topRestaurant.name} (${topRestaurant.city})` : 'N/A'
+        };
+      }, [filteredRows]);
+
+      const landingStats = useMemo(() => {
+        const topCity = summarizeBy(DATA, 'city')[0];
+        const topCuisine = summarizeBy(DATA, 'cuisine')[0];
+        const avgRating = DATA.reduce((sum, row) => sum + row.rating, 0) / DATA.length;
+        const avgCost = DATA.reduce((sum, row) => sum + row.cost, 0) / DATA.length;
+        const premiumRows = DATA.filter((row) => row.cost > 700);
+        const budgetRows = DATA.filter((row) => row.cost < 300);
+        const premiumAvg = premiumRows.reduce((sum, row) => sum + row.rating, 0) / premiumRows.length;
+        const budgetAvg = budgetRows.reduce((sum, row) => sum + row.rating, 0) / budgetRows.length;
+        return {
+          total: DATA.length,
+          topCity: `${topCity.label} (${formatNumber(topCity.value)})`,
+          topCuisine: `${topCuisine.label} (${formatNumber(topCuisine.value)})`,
+          avgRating: avgRating.toFixed(2),
+          avgCost: Math.round(avgCost),
+          premiumAvg: premiumAvg.toFixed(2),
+          budgetAvg: budgetAvg.toFixed(2)
+        };
+      }, []);
+
+      const chartData = useMemo(() => ({
+        citySpread: summarizeBy(filteredRows, 'city').slice(0, 8),
+        cuisineSpread: summarizeBy(filteredRows, 'cuisine').slice(0, 8),
+        segmentRatings: summarizeBy(filteredRows, 'cost_band', 'avg-rating')
+      }), [filteredRows]);
+
+      const displayResult = result.slice(0, 200);
+
+      useEffect(() => {
+        setUserSQL(activeQuery.sql);
+        setResult([]);
+        setMsg({ type: 'info', text: `Loaded Query ${activeQuery.id}. Run it to inspect results.` });
+      }, [activeQuery]);
+
+      const openPortfolio = () => {
+        if (isTransitioning) return;
+        setIsTransitioning(true);
+        setTimeout(() => {
+          setShowLanding(false);
+          setIsTransitioning(false);
+        }, 900);
+      };
+
+      const executeSQL = () => {
+        try {
+          const rows = alasql(userSQL);
+          const normalizedRows = Array.isArray(rows) ? rows : [];
+          setResult(normalizedRows);
+          setMsg({
+            type: 'success',
+            text: `Query executed successfully. ${formatNumber(normalizedRows.length)} rows returned${normalizedRows.length > 200 ? ' and first 200 are displayed' : ''}.`
+          });
+        } catch (error) {
+          setResult([]);
+          setMsg({ type: 'error', text: error.message || 'SQL execution failed.' });
+        }
+      };
+
+      const exportResults = () => {
+        if (!result.length) {
+          setMsg({ type: 'error', text: 'Run a query before exporting results.' });
+          return;
+        }
+        const headers = Object.keys(result[0]);
+        const csv = [
+          headers.join(','),
+          ...result.map((row) => headers.map((header) => `"${String(row[header] ?? '').replace(/"/g, '""')}"`).join(','))
+        ].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `swiggy-query-${activeQuery.id}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
+        setMsg({ type: 'success', text: 'Result exported as CSV.' });
+      };
+
+      if (showLanding) {
+        return (
+          <main className="min-h-screen w-screen flex items-center justify-center p-6 relative overflow-hidden fade-in">
+            <div className={`page-transition ${isTransitioning ? 'anim-trans' : ''}`}></div>
+            <div className="absolute inset-0 opacity-45">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_15%,rgba(249,115,22,0.28),transparent_26%),radial-gradient(circle_at_82%_75%,rgba(37,99,235,0.18),transparent_28%)]"></div>
+              <div className="absolute inset-0 code-editor"></div>
+            </div>
+            <section className="relative z-10 max-w-5xl w-full text-center slide-up">
+              <div className="mx-auto mb-8 w-20 h-20 rounded-2xl bg-gradient-to-br from-orange-500 to-blue-600 flex items-center justify-center shadow-2xl shadow-orange-900/40">
+                <i className="fa-solid fa-bowl-food text-white text-3xl"></i>
+              </div>
+              <p className="font-mono text-orange-300 text-sm uppercase tracking-[0.34em] mb-4">SQL Business Analytics Project</p>
+              <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-5">Ambrish Mishra</h1>
+              <h2 className="text-2xl md:text-4xl font-semibold text-gradient mb-6">Swiggy Restaurant Analytics</h2>
+              <p className="max-w-3xl mx-auto text-orange-50/82 text-base md:text-lg leading-relaxed mb-10">
+                Explore 61K+ restaurant records, business KPI queries, city opportunity signals, cuisine demand patterns, and pricing insights in one interactive SQL portfolio dashboard.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-4xl mx-auto mb-10 text-left">
+                <div className="metric-card rounded-2xl p-4">
+                  <div className="text-[10px] text-orange-300 font-mono uppercase tracking-widest mb-2">Dataset</div>
+                  <p className="text-sm text-orange-50/80">{formatNumber(landingStats.total)} restaurants across multiple Indian cities and cuisines.</p>
+                </div>
+                <div className="metric-card rounded-2xl p-4">
+                  <div className="text-[10px] text-orange-300 font-mono uppercase tracking-widest mb-2">Insights</div>
+                  <p className="text-sm text-orange-50/80">Business analysis, KPIs, window functions, views, and expansion-focused SQL questions.</p>
+                </div>
+                <div className="metric-card rounded-2xl p-4">
+                  <div className="text-[10px] text-orange-300 font-mono uppercase tracking-widest mb-2">Proof Point</div>
+                  <p className="text-sm text-orange-50/80">Premium average rating is {landingStats.premiumAvg}, ahead of budget at {landingStats.budgetAvg}.</p>
+                </div>
+              </div>
+              <button
+                onClick={openPortfolio}
+                disabled={isTransitioning}
+                className="smooth-btn inline-flex items-center justify-center gap-3 bg-orange-600 hover:bg-orange-500 disabled:bg-orange-900 disabled:cursor-wait px-8 py-4 rounded-2xl text-white text-sm font-bold tracking-widest uppercase shadow-xl shadow-orange-950/40"
+              >
+                <i className="fa-solid fa-arrow-right"></i>
+                Open SQL Portfolio
+              </button>
+              <div className="mt-8 font-mono text-xs text-orange-200/45 uppercase tracking-widest">
+                {formatNumber(landingStats.total)} rows loaded from swiggy_data.js
+              </div>
+            </section>
+          </main>
+        );
+      }
+
+      return (
+        <div className="mobile-scroll-page min-h-screen lg:h-screen w-screen flex flex-col relative fade-in">
+          <header className="relative z-50 px-4 md:px-6 py-4 border-b border-orange-900/30 bg-[#140d08] flex flex-col md:flex-row gap-4 justify-between md:items-center">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-orange-500 to-blue-600 flex items-center justify-center shadow-lg shadow-orange-900/30">
+                <i className="fa-solid fa-utensils text-white text-lg"></i>
+              </div>
+              <div>
+                <h1 className="font-bold text-xl text-white tracking-tight">Swiggy <span className="text-gradient">SQL Portfolio</span></h1>
+                <div className="text-[10px] text-orange-300/70 font-mono tracking-widest mt-1">DB: swiggy_db.restaurant</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-5">
+              <button
+                onClick={() => setShowLanding(true)}
+                className="smooth-btn border border-orange-500/25 hover:border-orange-400/70 bg-orange-950/20 hover:bg-orange-900/30 px-4 py-2 rounded-xl text-orange-200 text-xs font-bold uppercase tracking-widest flex items-center gap-2"
+              >
+                <i className="fa-solid fa-house"></i>
+                Home
+              </button>
+              <div className="text-right font-mono">
+                <div className="text-[10px] text-orange-200/45 uppercase tracking-widest">Rows Loaded</div>
+                <div className="text-lg font-bold text-orange-300">{formatNumber(DATA.length)}</div>
+              </div>
+            </div>
+          </header>
+
+          <div className="mobile-scroll-content flex-1 flex flex-col lg:flex-row overflow-hidden">
+            <aside className="lg:w-[295px] lg:min-w-[295px] max-h-72 lg:max-h-none border-b lg:border-b-0 lg:border-r border-orange-950/40 bg-[#110c08] flex flex-col">
+              <div className="p-4 border-b border-orange-950/40">
+                <h2 className="text-xs font-bold text-orange-200/70 uppercase tracking-widest font-mono">Portfolio Queries ({QUERIES.length})</h2>
+              </div>
+              <div className="flex-1 overflow-y-auto custom-scroll p-2 space-y-1">
+                {QUERIES.map((query) => (
+                  <button
+                    key={query.id}
+                    onClick={() => setActiveQuery(query)}
+                    className={`smooth-btn w-full text-left p-3 rounded-xl border ${activeQuery.id === query.id ? 'query-btn active shadow-lg shadow-orange-950/30' : 'border-transparent hover:bg-[#1c120d] hover:border-orange-900/40'}`}
+                  >
+                    <div className="text-xs font-bold text-orange-300 mb-1">Query {query.id}</div>
+                    <div className="text-sm font-semibold text-orange-50 truncate">{query.title}</div>
+                  </button>
+                ))}
+              </div>
+            </aside>
+
+            <main className="mobile-scroll-content lg:w-[calc(100%-295px)] flex flex-col p-4 gap-4 overflow-y-auto custom-scroll">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+                <div className="metric-card rounded-2xl p-4">
+                  <div className="text-[10px] text-orange-200/55 uppercase tracking-widest font-mono mb-2">Restaurants</div>
+                  <div className="text-2xl font-bold text-white">{formatNumber(dashboardStats.totalRestaurants)}</div>
+                </div>
+                <div className="metric-card rounded-2xl p-4">
+                  <div className="text-[10px] text-orange-200/55 uppercase tracking-widest font-mono mb-2">Avg Rating</div>
+                  <div className="text-2xl font-bold text-orange-200">{dashboardStats.avgRating}</div>
+                </div>
+                <div className="metric-card rounded-2xl p-4">
+                  <div className="text-[10px] text-orange-200/55 uppercase tracking-widest font-mono mb-2">Top City</div>
+                  <div className="text-xl font-bold text-white truncate">{dashboardStats.topCity}</div>
+                </div>
+                <div className="metric-card rounded-2xl p-4">
+                  <div className="text-[10px] text-orange-200/55 uppercase tracking-widest font-mono mb-2">Top Cuisine</div>
+                  <div className="text-xl font-bold text-white truncate">{dashboardStats.topCuisine}</div>
+                </div>
+              </div>
+
+              <div className="glass-panel rounded-2xl p-4">
+                <div className="flex flex-col xl:flex-row xl:items-end gap-3">
+                  {['city', 'cuisine', 'cost_band', 'rating_band'].map((key) => (
+                    <label key={key} className="flex-1">
+                      <span className="block text-[10px] text-orange-300 font-mono uppercase tracking-widest mb-2">{key.replace('_', ' ')}</span>
+                      <select
+                        value={filters[key]}
+                        onChange={(event) => setFilters((prev) => ({ ...prev, [key]: event.target.value }))}
+                        className="filter-control w-full rounded-xl px-3 py-2 text-sm outline-none focus:border-orange-400"
+                      >
+                        <option value="All">All</option>
+                        {uniqueValues[key].map((value) => <option key={value} value={value}>{value}</option>)}
+                      </select>
+                    </label>
+                  ))}
+                  <button
+                    onClick={() => setFilters({ city: 'All', cuisine: 'All', cost_band: 'All', rating_band: 'All' })}
+                    className="smooth-btn border border-orange-900/40 hover:border-orange-500 bg-[#1f140e] hover:bg-orange-950/30 px-4 py-2 rounded-xl text-orange-50 text-xs font-bold uppercase tracking-widest"
+                  >
+                    Reset Filters
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                <BarChart title="Restaurant Density by City" rows={chartData.citySpread} />
+                <BarChart title="Cuisine Distribution" rows={chartData.cuisineSpread} />
+                <BarChart title="Average Rating by Price Band" rows={chartData.segmentRatings} formatter={(value) => value.toFixed(2)} />
+              </div>
+
+              <div className="glass-panel rounded-2xl p-4">
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                  <div>
+                    <h3 className="text-[10px] text-orange-300 font-mono uppercase tracking-widest mb-2">Business Logic</h3>
+                    <p className="text-sm text-orange-50/80">{activeQuery.logic}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-[10px] text-orange-300 font-mono uppercase tracking-widest mb-2">Current Slice</h3>
+                    <p className="text-sm text-orange-50/80">Average cost is {formatCost(dashboardStats.avgCost)} and the strongest filtered restaurant is {dashboardStats.topRestaurant}.</p>
+                  </div>
+                  <div>
+                    <h3 className="text-[10px] text-orange-300 font-mono uppercase tracking-widest mb-2">Project Angle</h3>
+                    <p className="text-sm text-orange-50/80">This dashboard focuses on pricing, engagement, city opportunity, and restaurant value KPIs.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="glass-panel rounded-2xl overflow-hidden flex flex-col min-h-[380px]">
+                <div className="bg-[#1b120d] px-4 py-2 flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center border-b border-orange-950/40">
+                  <div className="flex gap-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500/60"></div>
+                    <div className="w-3 h-3 rounded-full bg-yellow-500/60"></div>
+                    <div className="w-3 h-3 rounded-full bg-orange-500/60"></div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button onClick={exportResults} className="smooth-btn border border-orange-900/40 hover:border-orange-500 bg-[#251811] hover:bg-orange-950/30 px-4 py-1.5 rounded-xl text-orange-50 text-xs font-bold flex items-center gap-2">
+                      <i className="fa-solid fa-download text-[10px]"></i> EXPORT CSV
+                    </button>
+                    <button onClick={executeSQL} className="smooth-btn bg-orange-600 hover:bg-orange-500 px-6 py-1.5 rounded-xl text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-orange-950/30">
+                      <i className="fa-solid fa-play text-[10px]"></i> EXECUTE SCRIPT
+                    </button>
+                  </div>
+                </div>
+                <div className="flex-1 relative code-editor min-h-[240px]">
+                  <pre
+                    aria-hidden="true"
+                    className="sql-highlight pointer-events-none absolute inset-0 p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap break-words"
+                    dangerouslySetInnerHTML={{ __html: highlightSQL(userSQL) }}
+                  ></pre>
+                  <textarea
+                    value={userSQL}
+                    onChange={(event) => setUserSQL(event.target.value)}
+                    spellCheck="false"
+                    className="relative z-10 w-full h-full bg-transparent p-4 font-mono text-xs text-transparent caret-orange-200 outline-none resize-none leading-relaxed"
+                  />
+                </div>
+                <div className={`px-4 py-2 text-[11px] font-mono border-t border-orange-950/40 flex items-center gap-2 ${msg.type === 'success' ? 'text-orange-200 bg-orange-950/20' : msg.type === 'error' ? 'text-red-300 bg-red-950/20' : 'text-orange-100/65 bg-[#1b120d]'}`}>
+                  <i className={`fa-solid ${msg.type === 'success' ? 'fa-check' : msg.type === 'error' ? 'fa-triangle-exclamation' : 'fa-terminal'}`}></i>
+                  {msg.text}
+                </div>
+              </div>
+
+              <div className="glass-panel rounded-2xl flex-1 flex flex-col overflow-hidden min-h-[360px]">
+                <div className="bg-[#1b120d] px-4 py-2 border-b border-orange-950/40 text-[10px] font-mono text-orange-200/55 tracking-widest uppercase">Output_Stream</div>
+                <div className="flex-1 overflow-auto custom-scroll p-2 max-h-[520px]">
+                  {result.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center opacity-35 text-orange-100/50">
+                      <i className="fa-solid fa-table text-3xl mb-2"></i>
+                      <p className="text-xs font-mono uppercase">No output generated</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="mb-2 text-[10px] font-mono uppercase tracking-widest text-orange-200/55">
+                        Showing {formatNumber(displayResult.length)} of {formatNumber(result.length)} rows
+                      </div>
+                      <table className="w-full text-left text-xs border-collapse font-mono">
+                        <thead className="bg-[#1b120d] sticky top-0">
+                          <tr>
+                            {Object.keys(displayResult[0] || {}).map((col) => (
+                              <th key={col} className="p-3 text-orange-300 border-b border-orange-950/40 uppercase text-[10px] tracking-wider">{col}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-orange-950/30">
+                          {displayResult.map((row, index) => (
+                            <tr key={index} className="hover:bg-orange-900/10 transition-colors">
+                              {Object.values(row).map((val, innerIndex) => (
+                                <td key={innerIndex} className="p-3 text-orange-50/85 align-top break-words">{String(val)}</td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </>
+                  )}
+                </div>
+              </div>
+            </main>
+          </div>
+        </div>
+      );
+    };
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
