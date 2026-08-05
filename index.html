@@ -308,6 +308,377 @@ ROUND((rating * LN(rating_count + 1)) / cost, 5) AS customer_value_index
 FROM restaurant
 ORDER BY customer_value_index DESC
 LIMIT 25;`
+      },
+      {
+        id: 14,
+        title: 'Dataset Preview',
+        logic: 'Displays the first restaurant records for quick validation after import.',
+        sql: `SELECT *
+FROM restaurant
+LIMIT 50;`
+      },
+      {
+        id: 15,
+        title: 'Total Restaurants',
+        logic: 'Counts the total number of restaurant rows available for analysis.',
+        sql: `SELECT COUNT(*) AS total_restaurants
+FROM restaurant;`
+      },
+      {
+        id: 16,
+        title: 'Cost Statistics',
+        logic: 'Checks minimum, maximum, and average restaurant cost.',
+        sql: `SELECT MIN(cost) AS min_cost,
+MAX(cost) AS max_cost,
+ROUND(AVG(cost), 2) AS avg_cost
+FROM restaurant;`
+      },
+      {
+        id: 17,
+        title: 'Rating Statistics',
+        logic: 'Validates the rating range and average rating across the dataset.',
+        sql: `SELECT MIN(rating) AS min_rating,
+MAX(rating) AS max_rating,
+ROUND(AVG(rating), 2) AS avg_rating
+FROM restaurant;`
+      },
+      {
+        id: 18,
+        title: 'Duplicate ID Check',
+        logic: 'Compares total rows with distinct restaurant IDs to identify duplicate ID records.',
+        sql: `SELECT COUNT(*) AS total_rows,
+COUNT(DISTINCT id) AS unique_ids
+FROM restaurant;`
+      },
+      {
+        id: 19,
+        title: 'Duplicate IDs',
+        logic: 'Lists restaurant IDs that appear more than once in the dataset.',
+        sql: `SELECT id, COUNT(*) AS duplicate_count
+FROM restaurant
+GROUP BY id
+HAVING COUNT(*) > 1;`
+      },
+      {
+        id: 20,
+        title: 'Same Restaurant Branches',
+        logic: 'Finds restaurants with repeated name-city combinations, useful for branch and duplicate checks.',
+        sql: `SELECT name, city, COUNT(*) AS occurrence
+FROM restaurant
+GROUP BY name, city
+HAVING COUNT(*) > 1
+ORDER BY occurrence DESC
+LIMIT 50;`
+      },
+      {
+        id: 21,
+        title: 'Missing Value Check',
+        logic: 'Counts missing values across the core restaurant fields.',
+        sql: `SELECT
+SUM(CASE WHEN name IS NULL THEN 1 ELSE 0 END) AS missing_name,
+SUM(CASE WHEN city IS NULL THEN 1 ELSE 0 END) AS missing_city,
+SUM(CASE WHEN rating IS NULL THEN 1 ELSE 0 END) AS missing_rating,
+SUM(CASE WHEN rating_count IS NULL THEN 1 ELSE 0 END) AS missing_rating_count,
+SUM(CASE WHEN cuisine IS NULL THEN 1 ELSE 0 END) AS missing_cuisine,
+SUM(CASE WHEN cost IS NULL THEN 1 ELSE 0 END) AS missing_cost,
+SUM(CASE WHEN link IS NULL THEN 1 ELSE 0 END) AS missing_link
+FROM restaurant;`
+      },
+      {
+        id: 22,
+        title: 'Invalid Ratings',
+        logic: 'Checks whether any restaurant rating falls outside the valid 0 to 5 range.',
+        sql: `SELECT *
+FROM restaurant
+WHERE rating < 0
+OR rating > 5;`
+      },
+      {
+        id: 23,
+        title: 'Distinct Cities',
+        logic: 'Lists all unique city names after cleaning and standardization.',
+        sql: `SELECT DISTINCT city
+FROM restaurant
+ORDER BY city;`
+      },
+      {
+        id: 24,
+        title: 'Above Average Rating Count',
+        logic: 'Counts restaurants with ratings higher than the dataset average.',
+        sql: `SELECT COUNT(*) AS above_average
+FROM restaurant
+WHERE rating > (SELECT AVG(rating) FROM restaurant);`
+      },
+      {
+        id: 25,
+        title: 'Cheapest Restaurants',
+        logic: 'Finds the lowest-cost restaurants in the dataset.',
+        sql: `SELECT name, city, cuisine, rating, cost
+FROM restaurant
+ORDER BY cost ASC
+LIMIT 10;`
+      },
+      {
+        id: 26,
+        title: 'Most Expensive Restaurants',
+        logic: 'Finds the highest-cost restaurants in the dataset.',
+        sql: `SELECT name, city, cuisine, rating, cost
+FROM restaurant
+ORDER BY cost DESC
+LIMIT 10;`
+      },
+      {
+        id: 27,
+        title: 'Cost Class Distribution',
+        logic: 'Segments restaurants into Budget, Affordable, Premium, and Luxury classes.',
+        sql: `SELECT
+CASE
+  WHEN cost < 200 THEN 'Budget'
+  WHEN cost BETWEEN 200 AND 500 THEN 'Affordable'
+  WHEN cost BETWEEN 501 AND 1000 THEN 'Premium'
+  ELSE 'Luxury'
+END AS category,
+COUNT(*) AS restaurants
+FROM restaurant
+GROUP BY category;`
+      },
+      {
+        id: 28,
+        title: 'Most Reviewed Restaurants',
+        logic: 'Ranks restaurants by review count to reveal high customer engagement.',
+        sql: `SELECT name, city, rating_count
+FROM restaurant
+ORDER BY rating_count DESC
+LIMIT 20;`
+      },
+      {
+        id: 29,
+        title: 'Popular Restaurants Count',
+        logic: 'Counts restaurants with more than 1,000 reviews.',
+        sql: `SELECT COUNT(*) AS popular_restro
+FROM restaurant
+WHERE rating_count > 1000;`
+      },
+      {
+        id: 30,
+        title: 'Average Rating by City',
+        logic: 'Ranks cities by average customer rating.',
+        sql: `SELECT city, ROUND(AVG(rating), 2) AS avg_rating
+FROM restaurant
+GROUP BY city
+ORDER BY avg_rating DESC;`
+      },
+      {
+        id: 31,
+        title: 'Top 10 Restaurants in India',
+        logic: 'Uses both rating and rating count to avoid ranking low-confidence restaurants too highly.',
+        sql: `SELECT name, city, rating, rating_count
+FROM restaurant
+WHERE rating_count > 100
+ORDER BY rating DESC, rating_count DESC
+LIMIT 10;`
+      },
+      {
+        id: 32,
+        title: 'Overrated Restaurants',
+        logic: 'Finds high-cost restaurants with below-average ratings.',
+        sql: `SELECT name, city, cost, rating
+FROM restaurant
+WHERE cost > (SELECT AVG(cost) FROM restaurant)
+AND rating < (SELECT AVG(rating) FROM restaurant)
+ORDER BY cost DESC
+LIMIT 50;`
+      },
+      {
+        id: 33,
+        title: 'Cities Needing Improvement',
+        logic: 'Highlights cities with lower customer ratings and weaker review confidence.',
+        sql: `SELECT city,
+ROUND(AVG(rating), 2) AS avg_rating,
+ROUND(AVG(rating_count), 0) AS avg_reviews
+FROM restaurant
+GROUP BY city
+ORDER BY avg_rating ASC, avg_reviews ASC
+LIMIT 30;`
+      },
+      {
+        id: 34,
+        title: 'Best Restaurant in Every City',
+        logic: 'Uses ROW_NUMBER to rank restaurants within each city by rating and review count.',
+        sql: `WITH ranked_restro AS (
+  SELECT city, name, rating, rating_count,
+  ROW_NUMBER() OVER (PARTITION BY city ORDER BY rating DESC, rating_count DESC) AS city_rank
+  FROM restaurant
+)
+SELECT *
+FROM ranked_restro
+WHERE city_rank = 1;`
+      },
+      {
+        id: 35,
+        title: 'Top 5 in Every City',
+        logic: 'Uses window ranking to isolate the top five restaurants inside every city.',
+        sql: `WITH ranked_restro AS (
+  SELECT city, name, rating, rating_count,
+  ROW_NUMBER() OVER (PARTITION BY city ORDER BY rating DESC, rating_count DESC) AS city_rank
+  FROM restaurant
+)
+SELECT *
+FROM ranked_restro
+WHERE city_rank <= 5;`
+      },
+      {
+        id: 36,
+        title: 'Highest Rated in Every Cuisine',
+        logic: 'Finds the strongest restaurant inside each cuisine category.',
+        sql: `WITH cuisine_rank AS (
+  SELECT cuisine, name, rating,
+  ROW_NUMBER() OVER (PARTITION BY cuisine ORDER BY rating DESC, rating_count DESC) AS rnk
+  FROM restaurant
+)
+SELECT *
+FROM cuisine_rank
+WHERE rnk = 1;`
+      },
+      {
+        id: 37,
+        title: 'Most Expensive in Every City',
+        logic: 'Ranks restaurants by cost within each city and keeps the top-priced option.',
+        sql: `WITH expensive AS (
+  SELECT city, name, cost,
+  ROW_NUMBER() OVER (PARTITION BY city ORDER BY cost DESC) AS restro_rnk
+  FROM restaurant
+)
+SELECT *
+FROM expensive
+WHERE restro_rnk = 1;`
+      },
+      {
+        id: 38,
+        title: 'Overall Restaurant Ranking',
+        logic: 'Ranks restaurants nationally using rating and review count.',
+        sql: `SELECT name, city, rating, rating_count,
+RANK() OVER (ORDER BY rating DESC, rating_count DESC) AS overall_rank
+FROM restaurant;`
+      },
+      {
+        id: 39,
+        title: 'Dense Restaurant Ranking',
+        logic: 'Uses DENSE_RANK to create a compact national restaurant ranking.',
+        sql: `SELECT name, city, rating, rating_count,
+DENSE_RANK() OVER (ORDER BY rating DESC, rating_count DESC) AS overall_rank
+FROM restaurant;`
+      },
+      {
+        id: 40,
+        title: 'Better Than City Average',
+        logic: 'Uses a correlated subquery to find restaurants outperforming their city average.',
+        sql: `SELECT name, city, rating
+FROM restaurant r
+WHERE rating > (
+  SELECT AVG(rating)
+  FROM restaurant
+  WHERE city = r.city
+)
+LIMIT 100;`
+      },
+      {
+        id: 41,
+        title: 'Rating Quartiles',
+        logic: 'Divides restaurants into four rating-based groups using NTILE.',
+        sql: `SELECT name, rating,
+NTILE(4) OVER (ORDER BY rating DESC) AS quartile
+FROM restaurant;`
+      },
+      {
+        id: 42,
+        title: 'Popularity Score',
+        logic: 'Computes a custom KPI from rating multiplied by rating count.',
+        sql: `SELECT name, city, rating, rating_count,
+ROUND(rating * rating_count, 2) AS popularity_score
+FROM restaurant
+ORDER BY popularity_score DESC
+LIMIT 25;`
+      },
+      {
+        id: 43,
+        title: 'Budget Champion Score',
+        logic: 'Identifies restaurants with strong ratings at lower prices.',
+        sql: `SELECT name, city, rating, cost,
+ROUND(rating / cost, 5) AS budget_score
+FROM restaurant
+WHERE cost > 30
+ORDER BY budget_score DESC
+LIMIT 25;`
+      },
+      {
+        id: 44,
+        title: 'Best Value Restaurant by City',
+        logic: 'Ranks restaurants in each city using the Customer Value Index.',
+        sql: `WITH restaurant_score AS (
+  SELECT city, name,
+  ROUND((rating * LN(rating_count + 1)) / cost, 5) AS score,
+  ROW_NUMBER() OVER (
+    PARTITION BY city
+    ORDER BY (rating * LN(rating_count + 1)) / cost DESC
+  ) AS rn
+  FROM restaurant
+)
+SELECT *
+FROM restaurant_score
+WHERE rn = 1;`
+      },
+      {
+        id: 45,
+        title: 'Running Average Rating',
+        logic: 'Calculates a running average rating ordered by restaurant ID.',
+        sql: `SELECT id, name, rating,
+ROUND(AVG(rating) OVER (ORDER BY id), 2) AS running_avg
+FROM restaurant
+LIMIT 100;`
+      },
+      {
+        id: 46,
+        title: 'City Summary View',
+        logic: 'Production-style view query for city-level reporting.',
+        sql: `SELECT city,
+COUNT(*) AS total_restaurants,
+ROUND(AVG(rating), 2) AS avg_rating,
+ROUND(AVG(cost), 2) AS avg_cost,
+ROUND(AVG(rating_count), 0) AS avg_reviews
+FROM restaurant
+GROUP BY city
+ORDER BY total_restaurants DESC;`
+      },
+      {
+        id: 47,
+        title: 'Premium Restaurants View',
+        logic: 'View-style query for premium restaurants with strong ratings.',
+        sql: `SELECT *
+FROM restaurant
+WHERE cost > 700
+AND rating >= 4
+LIMIT 100;`
+      },
+      {
+        id: 48,
+        title: 'Delhi Rating Explain Query',
+        logic: 'The optimization phase uses this query with an index on city and rating.',
+        sql: `SELECT *
+FROM restaurant
+WHERE city = 'Delhi'
+ORDER BY rating DESC
+LIMIT 100;`
+      },
+      {
+        id: 49,
+        title: 'Top Restaurants Procedure Output',
+        logic: 'Browser-friendly version of the stored procedure call for a selected city.',
+        sql: `SELECT name, rating, rating_count, cost
+FROM restaurant
+WHERE city = 'Bangalore'
+ORDER BY rating DESC, rating_count DESC
+LIMIT 10;`
       }
     ];
 
