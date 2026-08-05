@@ -180,7 +180,7 @@
         sql: `SELECT name, city, rating, rating_count
 FROM restaurant
 ORDER BY rating DESC, rating_count DESC
-LIMIT 100;`
+LIMIT 1000;`
       },
       {
         id: 2,
@@ -189,7 +189,7 @@ LIMIT 100;`
         sql: `SELECT name, city, rating, rating_count
 FROM restaurant
 ORDER BY rating ASC, rating_count ASC
-LIMIT 100;`
+LIMIT 1000;`
       },
       {
         id: 3,
@@ -208,7 +208,7 @@ ORDER BY rating_group;`
 FROM restaurant
 GROUP BY cuisine
 ORDER BY restaurants DESC
-LIMIT 100;`
+LIMIT 1000;`
       },
       {
         id: 5,
@@ -241,7 +241,7 @@ GROUP BY category;`
 FROM restaurant
 GROUP BY name
 ORDER BY total_rating DESC, ratings DESC
-LIMIT 100;`
+LIMIT 1000;`
       },
       {
         id: 8,
@@ -252,7 +252,7 @@ FROM restaurant
 WHERE cost < (SELECT AVG(cost) FROM restaurant)
 AND rating > (SELECT AVG(rating) FROM restaurant)
 ORDER BY rating DESC, cost ASC
-LIMIT 100;`
+LIMIT 1000;`
       },
       {
         id: 9,
@@ -263,7 +263,7 @@ FROM restaurant
 WHERE cost > 2 * (SELECT AVG(cost) FROM restaurant)
 AND rating < (SELECT AVG(rating) FROM restaurant)
 ORDER BY cost DESC
-LIMIT 100;`
+LIMIT 1000;`
       },
       {
         id: 10,
@@ -274,7 +274,7 @@ FROM restaurant
 GROUP BY city
 HAVING COUNT(*) > 30
 ORDER BY avg_rating DESC
-LIMIT 100;`
+LIMIT 1000;`
       },
       {
         id: 11,
@@ -287,7 +287,7 @@ FROM restaurant
 GROUP BY city
 HAVING COUNT(*) >= 20
 ORDER BY value_score DESC
-LIMIT 100;`
+LIMIT 1000;`
       },
       {
         id: 12,
@@ -297,7 +297,7 @@ LIMIT 100;`
 FROM restaurant
 GROUP BY city
 ORDER BY expansion_score DESC
-LIMIT 100;`
+LIMIT 1000;`
       },
       {
         id: 13,
@@ -307,7 +307,7 @@ LIMIT 100;`
 ROUND((rating * LN(rating_count + 1)) / cost, 5) AS customer_value_index
 FROM restaurant
 ORDER BY customer_value_index DESC
-LIMIT 100;`
+LIMIT 1000;`
       },
       {
         id: 14,
@@ -315,7 +315,7 @@ LIMIT 100;`
         logic: 'Displays the first restaurant records for quick validation after import.',
         sql: `SELECT *
 FROM restaurant
-LIMIT 100;`
+LIMIT 1000;`
       },
       {
         id: 15,
@@ -368,7 +368,7 @@ FROM restaurant
 GROUP BY name, city
 HAVING COUNT(*) > 1
 ORDER BY occurrence DESC
-LIMIT 100;`
+LIMIT 1000;`
       },
       {
         id: 21,
@@ -416,7 +416,7 @@ WHERE rating > (SELECT AVG(rating) FROM restaurant);`
         sql: `SELECT name, city, cuisine, rating, cost
 FROM restaurant
 ORDER BY cost ASC
-LIMIT 100;`
+LIMIT 1000;`
       },
       {
         id: 26,
@@ -425,7 +425,7 @@ LIMIT 100;`
         sql: `SELECT name, city, cuisine, rating, cost
 FROM restaurant
 ORDER BY cost DESC
-LIMIT 100;`
+LIMIT 1000;`
       },
       {
         id: 27,
@@ -449,7 +449,7 @@ GROUP BY category;`
         sql: `SELECT name, city, rating_count
 FROM restaurant
 ORDER BY rating_count DESC
-LIMIT 100;`
+LIMIT 1000;`
       },
       {
         id: 29,
@@ -476,7 +476,7 @@ ORDER BY avg_rating DESC;`
 FROM restaurant
 WHERE rating_count > 100
 ORDER BY rating DESC, rating_count DESC
-LIMIT 100;`
+LIMIT 1000;`
       },
       {
         id: 32,
@@ -487,7 +487,7 @@ FROM restaurant
 WHERE cost > (SELECT AVG(cost) FROM restaurant)
 AND rating < (SELECT AVG(rating) FROM restaurant)
 ORDER BY cost DESC
-LIMIT 100;`
+LIMIT 1000;`
       },
       {
         id: 33,
@@ -499,7 +499,7 @@ ROUND(AVG(rating_count), 0) AS avg_reviews
 FROM restaurant
 GROUP BY city
 ORDER BY avg_rating ASC, avg_reviews ASC
-LIMIT 100;`
+LIMIT 1000;`
       },
       {
         id: 34,
@@ -580,7 +580,7 @@ WHERE rating > (
   FROM restaurant
   WHERE city = r.city
 )
-LIMIT 100;`
+LIMIT 1000;`
       },
       {
         id: 41,
@@ -598,7 +598,7 @@ FROM restaurant;`
 ROUND(rating * rating_count, 2) AS popularity_score
 FROM restaurant
 ORDER BY popularity_score DESC
-LIMIT 100;`
+LIMIT 1000;`
       },
       {
         id: 43,
@@ -609,7 +609,7 @@ ROUND(rating / cost, 5) AS budget_score
 FROM restaurant
 WHERE cost > 30
 ORDER BY budget_score DESC
-LIMIT 100;`
+LIMIT 1000;`
       },
       {
         id: 44,
@@ -635,7 +635,7 @@ WHERE rn = 1;`
         sql: `SELECT id, name, rating,
 ROUND(AVG(rating) OVER (ORDER BY id), 2) AS running_avg
 FROM restaurant
-LIMIT 100;`
+LIMIT 1000;`
       },
       {
         id: 46,
@@ -658,7 +658,7 @@ ORDER BY total_restaurants DESC;`
 FROM restaurant
 WHERE cost > 700
 AND rating >= 4
-LIMIT 100;`
+LIMIT 1000;`
       },
       {
         id: 48,
@@ -668,7 +668,7 @@ LIMIT 100;`
 FROM restaurant
 WHERE city = 'Delhi'
 ORDER BY rating DESC
-LIMIT 100;`
+LIMIT 1000;`
       },
       {
         id: 49,
@@ -678,7 +678,7 @@ LIMIT 100;`
 FROM restaurant
 WHERE city = 'Bangalore'
 ORDER BY rating DESC, rating_count DESC
-LIMIT 100;`
+LIMIT 1000;`
       }
     ];
 
